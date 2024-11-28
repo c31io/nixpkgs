@@ -1,12 +1,29 @@
-{ appimageTools, fetchurl }:
-let
+{
+  lib,
+  buildNpmPackage,
+  fetchFromGitHub,
+  electron,
+}:
+buildNpmPackage rec {
   pname = "chatbox";
   version = "0.10.2";
-  src = fetchurl {
-    url = "https://github.com/Bin-Huang/chatbox/releases/download/v${version}/Chatbox.CE-${version}-x86_64.AppImage";
-    hash = "sha512-fIrRVN6gcvya8KZLVYi94Gi4kYayaet0sobx5wTvsrn2XXMC03JBM7JL/4dC4kCXdvqQNCBu9NDuIBk98MXRsg==";
+
+  src = fetchFromGitHub {
+    owner = "Bin-Huang";
+    repo = pname;
+    rev = "v${version}";
+    hash = "sha256-n3+qfIJyRv3OWSOQvmJRThjivpoa8OLEnxs8TYLi4Ng=";
   };
-in
-appimageTools.wrapType2 {
-  inherit pname version src;
+
+  npmDepsHash = "sha256-1o0LqUS2k+nNmAEnL7wrqEFjJ+GxKfczpeamVEejm4U=";
+
+  nativeBuildInputs = [ electron ];
+
+  dontNpmBuild = true;
+  makeCacheWritable = true;
+
+  postInstall = ''
+    makeWrapper ${electron}/bin/electron $out/bin/${pname} \
+      --add-flags $out/lib/node_modules/${pname}/main.js
+  '';
 }
